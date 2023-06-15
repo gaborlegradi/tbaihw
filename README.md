@@ -24,8 +24,18 @@ Sajnos ez a részfeladat már nem fért bele az időmbe.
 A megoldásommal kétféle classifiert készíthetünk, egy egyszerű full-mlp classifiert és egy olyat, amelynek encoder része variational autoencoder-ként lett tanítva, így a neck-nél a latent_dim dimenzióba történő vetítés az eredeti output jelentősen dimenzió redukált reprezentációja. Azért a VAE tanítással tanított encoderrel ellátott MLP classifiert választottam, mert a VAE tanítás során a neck-ben (ahol az encoder és decoder találkozik, itt a dimenzió latent_dim nagyságú) úgy reprezentáljuk a tanítóadatot, hogy minden dimenzió szerint (minden neuron kimenetet tekintve) az eloszlás normál eloszláshoz közel essen. Ezt a tulajdonságot aztán fel tudom használni arra, hogy ismeretlen eredetű adatcsomag esetén is tudjak valamit mondani arra, hogy az tekinthető-e az eredeti tanítóadat által reprezentált eloszlás mintavételezésének.
 
 ## Task4
-A különféle tanításokkal elért accuracy eredményeket tartalmazza az alábbi táblázat:
-**????**
+A különféle tanításokkal elért test accuracy eredményeket tartalmazza az alábbi táblázat:
+
+|      |fit_ae_then_cl_head|fit_all_ae_then_cl_head|fit_all_parts|fit_mlp_classifier|
+|---   |---                |---                    |---          |---               |
+| LD16 |       ~92%        |         ~92%          |    ~95%     |      ~95%        |
+| LD08 |       ~89%        |        ~90.5%         |    ~95%     |      ~95%        |
+| LD04 |      ~84.5%       |         ~84%          |   ~94.5%    |      ~96%        |
+| LD02 |       ~75%        |         ~76%          |    ~93%     |      ~95%        |
+
+Ami a fit_mlp_classifier tanításokat illeti, el is vártuk, hogy lényegében azonos és nagy értéket adjanak az így előállt modellek.
+A fit_all_parts tanítással előállt modellek alig adnak gyengébb eredményeket. Ugyanakkor, sajnos ezen modellek esetében sejtelmünk sincsen, mennyire megbízható a **z** kimenet annak becslésére, hogy a bemeneten hihetően a tanító adat eloszlásából mintavételzett adat került-e? (Lásd lejjebb a kifejtést.)
+A fit_ae_then_cl_head és fit_all_ae_then_cl_head tanítások nagyon hasonló performanszot eredményeztek. Az utóbbi esetben alkalmazott fit_all_parts előtanítás nem különösebben segít. Ezeknél az LD16, LD08, L04, LD02 modellek közül nehéz választani. Minél kisebb a latent_dim (LD), annál "érdekesebb" a predikciónk, ugyanakkor a performance cost mindegyik esetében kellemetlenül nagynak tűnik.
 
 ## Task5
 Annak vizsgálatára, hogy két minta ugyanazon eloszlásból való mintavételezéssel jött-e létre a Kullback Leibler Divergencia kiszámolása szolgálhat egyik megoldásul. Úgy gondolom, hogy erre annyi forrás szolgál, hogy egyedül az lehet érdekes a számunkra, hogy a jelentkező, vagyis én, tudja-e hová nyúljon.
