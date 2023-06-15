@@ -1,21 +1,23 @@
-# Házi feladat Turbine részére - 1st part
+# Házi feladat a Turbine részére - 1st part
 
-## A választott megoldás
+A feladat taskjain végighaladva foglalom össze a munkámat.
 
+## A választott megoldás összefoglalása + Task1
 A házi feladat első részének kiírásában a Task6 és Task7 mozgatta meg legjobban a fantáziámat. Úgy ítéltem meg, hogy ezen kérdésekre akkor tudok válaszolni, ha a modellemnek része egy variational autoencoder. Az alapötletem az volt, hogy betanítok egy VAE-t, majd ennek az encoder részére ráhelyezve egy MLP classifier head-et kapok egy tisztán MLP classifiert.
 
-Egy megoldást gyorsan össze is drótoztam egy Keras tutorialból kiindulva és teszteltem MNIST adaton. Itt már a latent_dim = 1 esetre is ~60-70% körüli accuracy-t kaptam, a latent_dim 2, illetve 3 értékénél 85% és 95% fölötti accuracy tűnt elérhetőenk. Ezt ígéretesnek ítélve rátértem a Wisconsin Breast Cancer Dataset-re készítendő megoldásomra.
+Egy megoldást gyorsan össze is drótoztam és teszteltem MNIST adaton, ezzel az adattal ugyanis nagyon jól lehet érzékeltetni latent_dim=2-re a reprezentációt a VAE neck-jében. Itt már a latent_dim = 1 esetre is ~60-70% körüli accuracy-t kaptam, a latent_dim 2, illetve 3 értékénél 85% és 95% fölötti accuracy tűnt elérhetőenk. Ezt ígéretesnek ítélve rátértem a Wisconsin Breast Cancer Dataset-re készítendő megoldásomra.
 
-A kódbázisban látható megoldásomnál arra törekedtem, hogy könnyű legyen esettanulmányokat elvégezni. A tbaihw.ipynb demostrálja az eszköz használatát. A kódbázis klónozása és a requirements.txt alapján a megfelelő környezet kialakítása után futtatható. Feltétel még, hogy a TensorBoard el legyen indítva a tbaihw könyvtában.
+A kódbázisban látható megoldásomnál arra törekedtem, hogy könnyű legyen esettanulmányokat elvégezni. A tbaihw.ipynb demostrálja az eszköz használatát. A kódbázis klónozása és a requirements.txt alapján a megfelelő környezet kialakítása után futtatható. (És ezzel létrejön a Task4 táblázat LD08-as sora.) Feltétel még, hogy a TensorBoard el legyen indítva a tbaihw könyvtában.
 
-Amint azt az osztályok, függvények kommentjeiben részletezem, a VAEC (Variational AutoEncoder and Classifier) osztályból készített példány becsomagolja a tanító-adatokat, és a legfontosabb adatokat (pl config), illetve létrehozza és tartja az encoder, decoder és classifier_head komponenseket. Ezek különféle stratégiával történő betanítása a fit_all_parts(), fit_autoencoder(), fit_classifier_head() és fit_mlp_classifier() tagfüggvényekkel lehetséges. A betanítást követően a compile-olás nélkül létrehozott self.mlp_classifier és self.mlp_classifier_with_z használhatóak mint tisztán mlp classifier, illetve olyan classifier, amelynél az autoencoder neck layere is az outputra van kötve (a kódban z).
+Amint azt az osztályok, függvények kommentjeiben részletezem, a VAEC (Variational AutoEncoder and Classifier) osztályból készített példány becsomagolja a tanító-adatokat, és a legfontosabb adatokat (pl config), illetve létrehozza és tartja az encoder, decoder és classifier_head komponenseket. Ezek különféle stratégiával történő betanítása a fit_all_parts(), fit_autoencoder(), fit_classifier_head() és fit_mlp_classifier() tagfüggvényekkel lehetséges:
+- fit_all_parts(): Az összes komponenset egyszerre tanítjuk.
+- fit_autoencoder(): Csak az encoder-t és decoder-t tanítjuk VAE tanítással.
+- fit_classifier_head(): Csak a classifier_head-et tanítjuk.
+- fit_mlp_classifier(): Egybe tanítjuk az encodert és a classifier_head-et. Ekkor a kapott modell tisztán MLP classifiernek tekinthető.
+
+A betanítást követően a compile-olás nélkül létrehozott self.mlp_classifier és self.mlp_classifier_with_z használhatóak mint tisztán mlp classifier, illetve olyan classifier, amelynél az autoencoder neck layere is az outputra van kötve (a kódban z).
 
 A tanításokat a VAEC példányon belül készített VAEC_Trainer példányok végzik. Fontos észrevenni, hogy ezek ugyanazokat a decoder, encoder és classifier_head komponenseket tartják, mint a VAEC_Trainereket tartó VAEC példány. Ezek feladata tehát az, hogy a tanítás során szabályozzák, hogy a total_loss-nak mely lossok legyenek a részei, továbbá mely komponensek legyenek taníthatóak, illetve nem taníthatóak.
-
-Az alábbiakban megyek végig a feladat taskjain:
-
-## Task1
-Teljesítve.
 
 ## Task2
 Sajnos ez a részfeladat már nem fért bele az időmbe.
