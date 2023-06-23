@@ -6,13 +6,15 @@
 
 A megoldásom elküldésekor is már jeleztem, hogy nem vagyok vele elégedett. Bár az elmúlt időszakban nem tudtam vele gép előtt foglalkozni, végig a fejemben volt és úgy gondolom, hogy most már van egy olyan megoldáskoncepcióm, amivel minden kérdésre megfelelő választ tudok adni.
 
-Amikor a feladatnak nekiálltam, először a MNIST adatokon (kézzel írt számjegyek) próbáltam ki. Mivel a számjegyek nagyon jól rekonstruálhatónak bizonyultak, a koncepcióm jól működött, de ez a pozitív tapasztalat félrevezetett. A Wisconsin Breast Cancer Database esetében ugyanis a bemenet nem jól rekonstruálható, pontosan amiatt, hogy a bemeneti adat számos csatornáján irreleváns információ áll rendelkezésre - aminek lehetőségét én magam is felvetettem, illetve az adatleírás is utalt erre. Ezért a VAE tanítás nem eredményezhet olyan autoencodert, ami jó performansszal rekonstruálhatn; a VAE tanítás során "lehetetlen feladatot" akarunk megoldani, a rekonstrukciós loss a tanítás során csak "rázza" a tanítandó **w<sub>i</sub>**, **b<sub>i</sub>** értékeket. Emiatt, a VAE tanítással nem kapunk olyan encodert, ami a számunkra érdekes információt desztillálná. A helyes megoldás koncepcióját az alábbiakban összegzem:
+Amikor a feladatnak nekiálltam, először a MNIST adatokon (kézzel írt számjegyek) próbáltam ki. Mivel a számjegyek nagyon jól rekonstruálhatónak bizonyultak, a koncepcióm jól működött, de ez a pozitív tapasztalat félrevezetett. A Wisconsin Breast Cancer Database esetében ugyanis a bemenet nem jól rekonstruálható, pontosan amiatt, hogy a bemeneti adat számos csatornáján irreleváns információ áll rendelkezésre - aminek lehetőségét én magam is felvetettem, illetve az adatleírás is utalt erre. Ezért a VAE tanítás nem eredményezhet olyan autoencodert, ami jó performansszal rekonstruálhatna; a VAE tanítás során "lehetetlen feladatot" akarunk megoldani, a rekonstrukciós loss a tanítás során csak "rázza" a tanítandó **w<sub>i</sub>**, **b<sub>i</sub>** értékeket. Emiatt, a VAE tanítással nem kapunk olyan encodert, ami a számunkra érdekes információt desztillálná. A helyes megoldás koncepcióját az alábbiakban összegzem:
 
 -  Bár pont ezt a kombinációt eredetileg nem teszi lehetőve a VAEC_Trainer (vaec_trainer.py), pontosan a variational réteget (Sampling, netutils.py) tartalmazó encodert és a rá ültetett mlp_classifier_headot kell egybe tanítani. Így egy Variational MLP Classifier (VMLPC) jön létre.
 -  A VMLPC-t be kell optimalizálni oly módon, hogy a következő elvárásoknak egyszerre felelünk meg:
-  - A **latent_dim** a lehető legkisebb legyen.
-  - Mindeközben a precision és recall értékekkel minősített performancera vonatkozóan a performance cost legyen minimális egy optimalizált full-MLP performanszához képest.
-  - A tanító adatot a Sampling rétegben a **z** vektorokkal reprezentálva elvárjuk, hogy a **z** tagjai (**z<sub>i</sub>**) is és **|z|** is normál eloszlásúak legyenek. Ezzel biztosítjuk és bizonyítjuk, hogy a Sampling réteg és a KL Divergence loss alkalmazása elérte a kívánt hatást, vagyis a tanítóadat reprezentációját ráfeszítette a normál eloszlásra.
+  - A **latent_dim** a lehető legkisebb legyen oly módon, hogy
+  - mindeközben a precision és recall értékekkel minősített performancera vonatkozóan a performance cost legyen minimális egy optimalizált full-MLP performanszához képest, illetve
+  - a tanító adatot a Sampling rétegben a **z** vektorokkal reprezentálva elvárjuk, hogy a **z** tagjai (**z<sub>i</sub>**) is és **|z|** is normál eloszlásúak legyenek.
+
+Ez utóbbi feltétellel biztosítjuk és bizonyítjuk, hogy a Sampling réteg és a KL Divergence loss alkalmazása elérte a kívánt hatást, vagyis a tanítóadat reprezentációját ráfeszítette a normál eloszlásra.
 
 Ezt követően a Task6-ra és Task7-re a következő válaszokat tudom adni:
 
