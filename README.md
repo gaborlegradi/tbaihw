@@ -1,5 +1,39 @@
 # Házi feladat a Turbine részére - 1st part
 
+## 2023 június 15 utáni megjegyzések
+
+### 2023 június 23-i megjegyzések
+
+A megoldásom elküldésekor is már jeleztem, hogy nem vagyok vele elégedett. Bár az elmúlt időszakban nem tudtam vele gép előtt foglalkozni, végig a fejemben volt és úgy gondolom, hogy most már van egy olyan megoldáskoncepcióm, amivel minden kérdésre megfelelő választ tudok adni.
+
+Amikor a feladatnak nekiálltam, először a MNIST adatokon (kézzel írt számjegyek) próbáltam ki. Mivel a számjegyek nagyon jól rekonstruálhatónak bizonyultak, vagyis a koncepcióm jól működött, ez a pozitív tapasztalat félrevezetett. A Wisconsin Breast Cancer Database esetében ugyanis a bemenet nem jól rekonstruálható, pontosan amiatt, hogy a bemeneti adat számos csatornáján irreleváns információ áll rendelkezésre - aminek lehetőségét én magam is felvetettem, illetve az adatleírás is utalt erre. Ezért a VAE tanítás nem eredményez olyan autoencodert, ami jó performansszal rekonstruálhatna. Emiatt pedig, a VAE tanytással nem kapunk olyan encodert, ami a számunkra érdekes információt desztillálná, mivel a VAE tanítás során "lehetetlen feladatot" akarunk megoldani, a rekonstrukciós loss a tanítás során csak "rázza" a tanítandó **w<sub>i</sub>**, **b<sub>i</sub>** értékeket. A helyes megoldást az alábbiakban összegzem:
+
+-  Bár pont ezt a kombinációt neredetileg nem teszi lehetőve a VAEC_Trainer (vaec_trainer.py), pontosan a variational réteget (Sampling, netutils.py) tartalmazó encodert és a rá ültetett mlp_classifier_headot kell egybe tanítani. Így egy Variational MLP Classifier (VMLPC) jön létre.
+-  A VMLPC-t be kell optimalizálni oly módon, hogy a következő elvárásoknak egyszerre felelünk meg:
+  - A **latent_dim** a lehető legkisebb legyen.
+  - Mindeközben a precision és recall értékekkel minősített performancera vonatkozóan a performance cost legyen minimális egy optimalizált full-MLP performanszához képest.
+  - A tanító adatot a Sampling rétegben a **z** vektorokkal reprezentálva elvárjuk, hogy a **z** tagjai (**z<sub>i</sub>**) is és **|z|** is normál eloszlásúak legyenek. Ezzel biztosítjuk és bizonyítjuk, hogy a Sampling réteg és a KL Divergence loss alkalmazása elérte a kívánt hatást, vagyis a tanítóadat reprezentációját ráfeszítette a normál eloszlásra.
+
+Ezt követően a Task6-ra és Task7-re a következő válaszokat tudom adni:
+
+## Task6
+A tömör válaszom a Task 6-nál az lenne, hogy amennyiben szignifikáns dimenzió redukciót érek el az encoderrel, akkor vagy arról van szó, hogy 
+- vannak irreleváns paraméterek,
+- vagy a modell enkóder része "érdekes" összefüggések megtanulása révén tudta a dimenzió redukciót ilyen - remélhetőleg - markáns mértékben megoldani.
+
+Az irreleváns paramétereket oly módon állapíthatjuk meg, hogy megvizsgáljuk, hogy egy VAE tanítás során mely csatornákon nem bizonyul lehetségesnek a rekonstrukció. Mivel a VAE tanítás nem konve
+
+
+Az irreleváns paraméterek megállapítására csak brute force megoldás ötletem van. Vennék egy megfelelően egyszerű, tisztán MLP classifiert, aminek inputja latent_dim méretű. Ezt a classifiert tömegesen betanítanám az összesen 30 input paraméteremből minden lehetséges latent_dim számú paraméter szubszetet tanítóadatnak használva. Ez sajnos 30 alatt a latent_dim számú kombinációt jelent, ami pl latent_dim=4-re 27405, így a módszer már itt meghal. A házi feladathoz meghatározott adatcsomag esetében amúgy szerepel ez a mondat: "best predictive accuracy obtained using one separating plane in the 3-D space of Worst Area, Worst Smoothness and Mean Texture". latent_dim=3 esetben a kombinációk száma 4060, ezt egy nagyon egyszerű MLP classifierrel éppen végig lehet számolni. A konklúziót pedig az alapján hoznám meg, hogy van-e olyan paraméter szubszet, amivel csekély performance cost árán is be lehet tanítani a classifiert?
+
+A "feature selection techniques in machine learning" kereső kifejezéssel amúgy számos forrás található, amelyek segíthetnek megállapítani az irreleváns paramétereket. Ezek megemésztése már nem fért bele az időmbe, éles helyzetben választanék egy megfelelő módszert az itt sorjázó irodalomból, pl: https://www.analyticsvidhya.com/blog/2020/10/feature-selection-techniques-in-machine-learning/
+
+## Task7
+És eljutottunk végül a fő kérdésig, amelynek megválaszolhatóságát szem előtt tartva választottam ki a variational autoencoder-es megoldásomat. Amennyiben ismeretlen minőségű adatot kapunk targetek nélkül, akkor az mlp_classifier_with_z classifiert használnám, ami szigorúan úgy lett betanítva, hogy először fit_autoencoder()-rel betanítjuk a VAE-t, majd ezt követően a fit_classifier_head()-del betanítjuk a classifier head-et is. Ezután egy adott input prediktálása során a latent_dim méretű "z" output vektor minden egyes elemére T-teszttel megmondjuk, hogy milyen konfidencia érték mellett tekinthető az értéke egy normál-eloszlásból történő mintavételezésnek. Így egy konfidencia-vektort kapunk, aminek értelmezése még kérdéseket vet fel. Ugyanezt a tesztet elvégezhetjük a vektor hosszértékével is, ekkor egyetlen konfidencia értéket kapunk. Ezzel tehát azt becsülnénk meg inputonként (egy adatsor 30 bemenő értékkel), hogy milyen konfidenciával jelenthetjük ki, hogy legalábbis a neck-beli reprezentációs térben az eredeti tanító adatnak megfelelő normál eloszlás mintavéltelének tekinthető-e az adott input?
+
+
+## A 2023 június 23 előtti megoldás
+
 A feladat taskjain végighaladva foglalom össze a munkámat.
 
 ## A választott megoldás összefoglalása + Task1
