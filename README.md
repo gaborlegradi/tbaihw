@@ -31,7 +31,7 @@ A Task7-re adott válaszom lényegében nem változott, de kis mértékben finom
 Egy adott input prediktálása során a latent_dim méretű **z** output vektor minden egyes **z<sub>i</sub>** elemére T-teszttel megmondjuk, hogy milyen konfidencia érték mellett tekinthető az értéke egy normál-eloszlásból történő mintavételezésnek. Így egy konfidencia-vektort kapunk. Ugyanezt a tesztet elvégezhetjük a vektor **|z|** hosszértékével is, ekkor egyetlen konfidencia értéket kapunk. Ezzel tehát azt becsülnénk meg inputonként (egy adatsor 30 bemenő értékkel), hogy milyen konfidenciával jelenthetjük ki, hogy legalábbis a neck-beli reprezentációs térben az eredeti tanító adatnak megfelelő normál eloszlás mintavéltelének tekinthető-e az adott input? Amennyiben csak a **z<sub>i</sub>** bizonyos értékei lógnak ki, lehetséges, hogy meg tudjuk mondani, hogy milyen feature tekintetében vagyunk eloszláson kívüliek. Ennek feltétele, hogy a latent_dim beli reprezentációnál tudunk-e szemantikai értelmezést adni a dimenzióknak.
 
 
-## A 2023 június 23 előtti megoldás
+## A 2023 június 15-én beküldött megoldás
 
 A feladat taskjain végighaladva foglalom össze a munkámat.
 
