@@ -19,14 +19,14 @@ Ez utóbbi feltétellel biztosítjuk és bizonyítjuk, hogy a Sampling réteg é
 Ezt követően a Task6-ra és Task7-re a következő válaszokat tudom adni:
 
 ## Task6
-A tömör válaszom a Task 6-nál az lenne, hogy amennyiben szignifikáns dimenzió redukciót érek el az encoderrel, akkor vagy arról van szó, hogy 
+A Task 6-nál a válaszom ezúttal az, hogy amennyiben szignifikáns dimenzió redukciót érek el az encoderrel, akkor vagy arról van szó, hogy 
 - vannak irreleváns paraméterek,
 - vagy a modell enkóder része "érdekes" összefüggések megtanulása révén tudta a dimenzió redukciót ilyen - remélhetőleg - markáns mértékben megoldani.
 
-Az irreleváns paramétereket oly módon állapíthatjuk meg, hogy megvizsgáljuk, hogy egy VAE tanítás során mely csatornákon nem bizonyul lehetségesnek a rekonstrukció. (A latent_dim-et már előtte, a fent írtak szerint meghatároztuk.) Mivel a VAE tanítás nem konvergál, itt lehet, hogy egy többlépcsős algoritmust kell alkalmazni: Az első tanítási próbálkozás, vagy több próbálkozás eredményeképpen meg kell állapítani, hogy mely input csatornák a legkevésbé rekonstruálhatóak. Ezeket ki kell venni a lossból, majd ezt követően ismét tanítani azzal a céllal, hogy a megmaradt csatornák közül kiválasszuk a legkevésbé rekonstruálhatóakat. Ezt a külső iterációt addig kell folytatni, amíg a bemeneten meghagyott csatornák mindegyike jól rekonstruálható lesz. A többit tekinthetjük irreleváns információ hordozójának.
+Az irreleváns paramétereket oly módon állapíthatjuk meg, hogy megvizsgáljuk, hogy egy VAE tanítás során mely csatornákon nem bizonyul lehetségesnek a rekonstrukció. (A **latent_dim**-et már előtte, a fent írtak szerint meghatároztuk.) Mivel a VAE tanítás nem konvergál, itt lehet, hogy egy többlépcsős algoritmust kell alkalmazni: Az első tanítási próbálkozás, vagy több próbálkozás eredményeképpen meg kell állapítani, hogy mely input csatornák a legkevésbé rekonstruálhatóak. Ezeket ki kell venni a lossból, majd ezt követően ismét tanítani azzal a céllal, hogy a megmaradt csatornák közül kiválasszuk a legkevésbé rekonstruálhatóakat. Ezt a külső iterációt addig kell folytatni, amíg a bemeneten meghagyott csatornák mindegyike jól rekonstruálható lesz. A többit tekinthetjük irreleváns információ hordozójának.
 
 ## Task7
-A Task7-re adott válaszom nem változott:
+A Task7-re adott válaszom lényegében nem változott, de kis mértékben finomítottam:
 
 Egy adott input prediktálása során a latent_dim méretű **z** output vektor minden egyes **z<sub>i</sub>** elemére T-teszttel megmondjuk, hogy milyen konfidencia érték mellett tekinthető az értéke egy normál-eloszlásból történő mintavételezésnek. Így egy konfidencia-vektort kapunk. Ugyanezt a tesztet elvégezhetjük a vektor **|z|** hosszértékével is, ekkor egyetlen konfidencia értéket kapunk. Ezzel tehát azt becsülnénk meg inputonként (egy adatsor 30 bemenő értékkel), hogy milyen konfidenciával jelenthetjük ki, hogy legalábbis a neck-beli reprezentációs térben az eredeti tanító adatnak megfelelő normál eloszlás mintavéltelének tekinthető-e az adott input? Amennyiben csak a **z<sub>i</sub>** bizonyos értékei lógnak ki, lehetséges, hogy meg tudjuk mondani, hogy milyen feature tekintetében vagyunk eloszláson kívüliek. Ennek feltétele, hogy a latent_dim beli reprezentációnál tudunk-e szemantikai értelmezést adni a dimenzióknak.
 
