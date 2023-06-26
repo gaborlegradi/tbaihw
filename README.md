@@ -2,6 +2,13 @@
 
 ## 2023 június 15 utáni megjegyzések
 
+### TODO
+- TensorBoard callback.
+- VEncoder + classifier head training and evaluation.
+- Classifier head training with z_mean as Encoder output while Encoder is not trainable.
+- Coding T-probe.
+- Coding Shapiro-Wilk test.
+
 ### 2023 június 23-i megjegyzések
 
 A megoldásom elküldésekor is már jeleztem, hogy nem vagyok vele elégedett. Bár az elmúlt időszakban nem tudtam vele gép előtt foglalkozni, végig a fejemben volt és úgy gondolom, hogy most már van egy olyan megoldáskoncepcióm, amivel minden kérdésre megfelelő választ tudok adni.
