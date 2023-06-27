@@ -56,16 +56,20 @@ class VAEC():
             encoder=self.encoder, decoder=self.decoder, classifier_head=self.classifier_head, train_what='mlp_classifier')
         self.trainer_mlp_classifier.compile(optimizer=tf.keras.optimizers.Adam())
 
-        # Creating mlp_classifier and mlp_classifier_with_z.
+        self.trainer_var_mlp_classifier = VAEC_Trainer(
+            encoder=self.encoder, decoder=self.decoder, classifier_head=self.classifier_head, train_what='var_mlp_classifier')
+        self.trainer_var_mlp_classifier.compile(optimizer=tf.keras.optimizers.Adam())
+
+        # Creating mlp_classifier and var_mlp_classifier.
         input = tf.keras.Input(shape=(config['global_input_dim'], ))
         z_mean, z_log_var, z = self.encoder(input)
-        output = self.classifier_head(z)
+        output = self.classifier_head(z_mean)
         self.mlp_classifier = tf.keras.Model(input, output)
 
         input = tf.keras.Input(shape=(config['global_input_dim'], ))
         z_mean, z_log_var, z = self.encoder(input)
-        output = self.classifier_head(z)
-        self.mlp_classifier_with_z = tf.keras.Model(input, [output, z])
+        output = self.classifier_head(z_mean)
+        self.var_mlp_classifier = tf.keras.Model(input, [output, z_mean, z_log_var, z])
 
     # Training functions for 'all', 'autoencoder', 'classifier_head' and 'mlp_classifier' modes' trainers.
     def fit_all_parts(self, epochs, batch_size=128, **kwargs):
@@ -85,6 +89,11 @@ class VAEC():
         self.epoch += epochs
     def fit_mlp_classifier(self, epochs, batch_size=128, **kwargs):
         self.trainer_mlp_classifier.fit(self.x_train, self.y_train, validation_data=(self.x_test, self.y_test), 
+                            initial_epoch=self.epoch, epochs=self.epoch + epochs, 
+                            batch_size=batch_size, callbacks=[self.tb_callback], **kwargs)
+        self.epoch += epochs
+    def fit_var_mlp_classifier(self, epochs, batch_size=128, **kwargs):
+        self.trainer_var_mlp_classifier.fit(self.x_train, self.y_train, validation_data=(self.x_test, self.y_test), 
                             initial_epoch=self.epoch, epochs=self.epoch + epochs, 
                             batch_size=batch_size, callbacks=[self.tb_callback], **kwargs)
         self.epoch += epochs
