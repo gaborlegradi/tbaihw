@@ -69,9 +69,8 @@ class VAEC_Trainer(tf.keras.Model):
         """
         z_mean, z_log_var, z = self._encoder(x)
         recon = self._decoder(z)
-        # if self.train_what == 'mlp_classifier':
+        # Prediction with variational inference and without
         pred = self._classifier_head(z_mean)
-        # else:
         pred_var = self._classifier_head(z)
         # Kullback Leibler Divergence loss.
         kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var))

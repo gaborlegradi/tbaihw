@@ -42,33 +42,56 @@ print(np.exp(pred[2][:7]/2))
 # %%
 
 def plot_label_clusters(pred_train, y_train, pred_test, y_test):
-    # display a 2D plot of the digit classes in the latent space
-    # z_mean, _, _ = vae.encoder.predict(data)
-    plt.figure(figsize=(30, 10))
-    plt.subplot(131)
+    
+    plt.figure(figsize=(20, 30))
+
+    plt.subplot(321)
+    plt.scatter(pred_train[3][:, 0], pred_train[3][:, 1], c=y_train)
+    plt.title("Train::z")
+    plt.xlabel("z[0]")
+    plt.ylabel("z[1]")
+    plt.xlim(-5, 5)
+    plt.ylim(-5, 5)
+    
+    plt.subplot(322)
+    plt.scatter(pred_test[3][:, 0], pred_test[3][:, 1], c=y_test)
+    plt.title("Test::z")
+    plt.xlabel("z[0]")
+    plt.ylabel("z[1]")
+    plt.xlim(-5, 5)
+    plt.ylim(-5, 5)
+    
+    plt.subplot(323)
     plt.scatter(pred_train[1][:, 0], pred_train[1][:, 1], c=y_train)
-    #plt.colorbar()
+    plt.title("Train::z_mean")
     plt.xlabel("z[0]")
     plt.ylabel("z[1]")
     plt.xlim(-3, 3)
     plt.ylim(-3, 3)
 
-    plt.subplot(132)
-    plt.scatter(pred_train[3][:, 0], pred_train[3][:, 1], c=y_train)
-    #plt.colorbar()
-    plt.xlabel("z[0]")
-    plt.ylabel("z[1]")
-    plt.xlim(-3, 3)
-    plt.ylim(-3, 3)
-    
-    plt.subplot(133)
+    plt.subplot(324)
     plt.scatter(pred_test[1][:, 0], pred_test[1][:, 1], c=y_test)
-    #plt.colorbar()
+    plt.title("Test::z_mean")
     plt.xlabel("z[0]")
     plt.ylabel("z[1]")
     plt.xlim(-3, 3)
     plt.ylim(-3, 3)
+
+    plt.subplot(325)
+    plt.scatter(pred_train[1][:, 0], pred_train[1][:, 1], c=y_train)
+    plt.title("Train::z_mean")
+    plt.xlabel("z[0]")
+    plt.ylabel("z[1]")
+
+    plt.subplot(326)
+    plt.scatter(pred_test[1][:, 0], pred_test[1][:, 1], c=y_test)
+    plt.title("Test::z_mean")
+    plt.xlabel("z[0]")
+    plt.ylabel("z[1]")
     plt.show()
+
+
+
 
 # %%
 vaec.fit_var_mlp_classifier(10)
