@@ -2,6 +2,26 @@
 
 ## 2023 június 15 utáni megjegyzések
 
+### 2023 június 5-i összefoglaló
+
+Az eredeti koncepcióm az volt, hogy
+1. betanítok egy Variational AutoEncodert (VAE),
+2. majd ennek Encoder részére ráteszek egy classifier head-et és azt úgy tanítom be, hogy az Encoder esetében trainable=False beállítással fagyasztom a taníthatóságot.
+
+Ezt először a MNIST adatokon (kézzel írt számjegyek) próbáltam ki. Mivel a számjegyek esetében minden pixel (ezek képezik az input csatornákat) releváns információt hordoz, ezért nagyon jól rekonstruálhatónak bizonyultak, és a koncepcióm jól működött.
+
+#### Variational AutoEncoderek 
+
+A VAE-k eredetileg generatív eszköznek lettek kitalálva főleg képek generálásához, a GAN-ok mellett a legnépszerűbbek voltak erre a célra egy időben. VAE úgy jön létre, hogy egybeépítünk egy olyan Encoder + Decoder párost, 
+1. amelynek összeillesztésénél a neckben, a reprezentáció nagyon kis dimenziószámra (latent_dim) van szorítva a bemeneti csatornaszűmhoz képest, illetve
+2. a neckben az Encoder kimenete nem fix érték, hanem valamilyen eloszlás, jelen esetben Gauss-eloszlás, amit a tanítás során egyszerű Monte-Carlo módszerrel mintavételezünk, és
+3. a lossban a rekonstrukciós loss mellett megjelenik a KL divergencia, ahol a KL divergencia referencia eloszlása a normál-eloszlás ($\mu=0$, $\sigma=1$).
+
+Egy [kifejezetten jó leírás található itt](https://towardsdatascience.com/understanding-variational-autoencoders-vaes-f70510919f73) a VAE-kről, amely megmutatja a koncepcó mögött meghúzódó Bayesiánus gondolatot is.
+
+A VAE működésének 
+
+
 ### 2023 június 23-i megjegyzések
 
 A megoldásom elküldésekor is már jeleztem, hogy nem vagyok vele elégedett. Bár az elmúlt időszakban nem tudtam vele gép előtt foglalkozni, végig a fejemben volt és úgy gondolom, hogy most már van egy olyan megoldáskoncepcióm, amivel minden kérdésre megfelelő választ tudok adni.
