@@ -29,7 +29,10 @@ Amennyiben a referencia eloszlás N(0, 1), akkor
 
 $$ KL(p,N(0, 1)) = -log(\sigma_1) + \dfrac{\sigma_1^2 + \mu_1^2}{2} - \dfrac{1}{2} $$
 
-Ez a loss tag jelenik meg a vaec_trainer.py-ban a calc_loss függvényben a 76-77-ik sorban.
+Ez a loss tag jelenik meg a vaec_trainer.py-ban a calc_loss függvényben a 76-77-ik sorban. Ez a loss tag arra veszi rá a hálónkat, hogy a neck-ben az egymáshoz típusosan hasonlító bemeneteket egymáshoz közeli eloszlásokkal reprezentálja és ezeket minél jobban a normál eloszlás felé próbálja tolni. Ugyanakkor a rekonstrukciós loss tag (vagy, később a prediction loss) meg próbálja a különféle típusokat egymástól eltávolítani, hogy azok megkülönböztethetőek legyenek. Ha jól megnézzük a KL div általunk használt közelítését, akkor azt látjuk, hogy a várható érték és a szigma egymástól szeparáltan szerepel az összefüggésben. Vagyis a KL div használatának két hatása van: húzza befelé a (0, 0,...)-hoz a várható értéket, a szigmát pedig húzza 1-hez. A KL div és a rekonstrukciós loss (vagy prediction loss) együttesen tehát megvalósítja a teljességet és a folytonosságot is az alábbi módon:
+1. A legsűrűbben előforduló train típusokat középre (vagyis a (0, 0,...) környékére) húzza, a ritkább esetek a szélekre csúsznak és
+2. a típusokat úgy rendezi el egymás mellett, hogy közöttük a két típus átmenetét kódolja. Azokat a típusokat hajlamos egymás mellé rendezni, amelyek kombinációja gyakrabban fordul elő a tanítóadatban, pl 7-es  meg 1-es számjegyek esetén.
+3. Nagyon fontos, ezért külön pontban emelem ki, hogy a tanítás során a latent_dim méretű neck-ben a mintavételezésekkel sűrűn megszórt terület úgy tekinthető, mint egy értelmezési tartomány. Amit itt reprezentálunk, arra a Decoder egyrészt tanítva van, másrészt "értelmes" kimenetet produkál (lásd fentebb: teljesség).
 
 
 ### 2023 június 23-i megjegyzések
