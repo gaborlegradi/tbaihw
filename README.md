@@ -34,6 +34,50 @@ Ez a loss tag jelenik meg a vaec_trainer.py-ban a calc_loss függvényben a 76-7
 2. a típusokat úgy rendezi el egymás mellett, hogy közöttük a két típus átmenetét kódolja. Azokat a típusokat hajlamos egymás mellé rendezni, amelyek kombinációja gyakrabban fordul elő a tanítóadatban, pl 7-es  meg 1-es számjegyek esetén.
 3. Nagyon fontos, ezért külön pontban emelem ki, hogy a tanítás során a latent_dim méretű neck-ben a mintavételezésekkel sűrűn megszórt terület úgy tekinthető, mint egy értelmezési tartomány. Amit itt reprezentálunk, arra a Decoder egyrészt tanítva van, másrészt "értelmes" kimenetet produkál (lásd fentebb: teljesség).
 
+#### Az első megoldás összefoglalása
+
+A kódbázisban látható megoldásomnál arra törekedtem, hogy könnyű legyen esettanulmányokat elvégezni. A **tbaihw.ipynb** demostrálja az eszköz használatát. A kódbázis klónozása és a requirements.txt alapján a megfelelő környezet kialakítása után futtatható. Feltétel még, hogy a TensorBoard el legyen indítva a tbaihw könyvtában.
+
+Amint azt az osztályok, függvények kommentjeiben részletezem, a VAEC (Variational AutoEncoder and Classifier) osztályból készített példány becsomagolja a tanító-adatokat, és a legfontosabb adatokat (pl config), illetve létrehozza és tartja az encoder, decoder és classifier_head komponenseket. Ezek különféle stratégiával történő betanítása a fit_all_parts(), fit_autoencoder(), fit_classifier_head() és fit_mlp_classifier() tagfüggvényekkel lehetséges:
+- fit_all_parts(): Az összes komponenset egyszerre tanítjuk.
+- fit_autoencoder(): Csak az encoder-t és decoder-t tanítjuk VAE tanítással.
+- fit_classifier_head(): Csak a classifier_head-et tanítjuk.
+- fit_mlp_classifier(): Egybe tanítjuk az encodert és a classifier_head-et. Ekkor a kapott modell tisztán MLP classifiernek tekinthető.
+
+A betanítást követően a compile-olás nélkül létrehozott self.mlp_classifier és self.mlp_classifier_with_z használhatóak mint tisztán mlp classifier, illetve olyan classifier, amelynél az autoencoder neck layere is az outputra van kötve (a kódban z).
+
+A tanításokat a VAEC példányon belül készített VAEC_Trainer példányok végzik. Fontos észrevenni, hogy ezek ugyanazokat a decoder, encoder és classifier_head komponenseket tartják, mint a VAEC_Trainereket tartó VAEC példány. Ezek feladata tehát az, hogy a tanítás során szabályozzák, hogy a total_loss-nak mely lossok legyenek a részei, továbbá mely komponensek legyenek taníthatóak, illetve nem taníthatóak.
+
+Ezzel a megoldással úgy terveztem már a Wisconsin Breast Cancer Dataset-en tanítani, hogy a VAEC példány fit_autoencoder tagfüggvényével először betanítom az Encoder-t és a Decoder-t, majd a fit_classifier_head tagfüggvénnyel betanítom a classifier head-et. A tapasztalatom az volt, hogy a rekonstrukció nem működött jól. Ennek két lehetséges okát láttam:
+- vannak irreleváns paraméterek,
+- vagy a modell enkóder része "érdekes" összefüggések megtanulása révén tudta a dimenzió redukciót ilyen - remélhetőleg - markáns mértékben megoldani.
+A Wisconsin Breast Cancer Dataset leírásában tulajdonképpen konkrétan szerepel, hogy a bemenő csatornák nagy része irreleváns: "best predictive accuracy obtained using one separating plane in the 3-D space of Worst Area, Worst Smoothness and Mean Texture". Mivel a rekon loss úgymond csapkodott, nehéz volt a tanítást értékelni és az Encoder + Classifier head összeállítás accuracy-ja sem járt közel ahhoz a 96%-hoz, amit egy MLP classifierrel könnyedén össze lehetett hozni (teszt adaton, természetesen).
+
+#### Aktuális megoldás összefoglalása
+
+Az első megoldásra célzottan létrehozott kódomon némi átalakítás eszközlésével egy másik megoldást dolgoztam ki (a kód historikus fejlődése miatt így kicsit feleslegesen elbonyolódott):
+1. Itt megjelent a fit_var_mlp_classifier tagfüggvény a VAEC osztályban, ami egybe tanítja a Sampling layerrel ellátott Encodert és a classifier_headot.
+2. Ezen felül a VAEC_trainer úgy lett átalakítva, hogy tanítás során a neck-ben, vagyis a latent_dim dimenziójú reprezentációban az Encoder által kiadott eloszlásokat ténylegesen mintavételezzük és ezt kapja a classifier_head mint input, viszont inferenciakor a classifier_head a z_mean-t, vagyis az eloszlás várható értékét kapja. Az így kialakított megoldással az alábbiakat tapasztaltam:
+
+- Az általános tapasztalat a tanítási tesztekkel  az volt, hogy latent_dim=2, 3, ... N-re ugyanazt a klasszifikálási performanszot kapjuk (~99% accuracy), míg latent_dim=1-nél a tanulás nem indul be.
+-  A test0x.ipynb-ok demonstrálnak pár tanítást latent_dim=2-nél, különösen a test03.ipynb érdekes. A notebookokban ábrákat készítettem 10, 30, 70, 150, 310, 630, 1000, 2000, ... 10000 epoch után. Az ábrák bal oldalán mindig a train adattal, a jobb oldalon teszt adattal készített plotok vannak. Felül a ténylegesen mintavételzett eloszlások láthatók fixen [-5, 5] tengelymérettel. Középen a z_mean-ok láthatóak fixen [-3, 3] tengelymérettel, alul ugyanez, de "rugalmas" [min, max] tengelyméretekkel. Ezek az ábrák szépen megmutatják, hogy a tanítás során hogyan szeparálódnak a 0 és 1 labelű classok, illetve, hosszú tanítás után a reprezentáció végül 1 dimenzióba "szorul", és a tanítási adat reprezentációja a két osztályra markénsan elkülönül, lásd a legutolsó ábrát.
+-  Az accuracy paramétert véve alapul, a legjobb klasszifikálási performanszot 400 epoch környékén értem el, utána ez a megoldás is túltanulási tüneteket mutatott. Ekkorra még a fent kifejtett 1 dimenzióba történő redukálódás nem teljesen játszódik le, lásd a 310 és 630 epoch utáni ábrákat, illetve a tanító adat totális szeparációja sem jön létre.
+
+#### Javaslatok értelmezésre
+
+- Én egy teszt adaton vett, kikapcsolt mintavételezéssel számolt accuracy-ra (vagy még inkább F1 score-ra)  optimalizált tanítást választanék, ehhez hasonlót demonstrál a Test03.ipynb-ban a 310 epoch utáni ábra.
+- A train adatoknál a latent_dim reprezentációba beszórt **z értékek**re (mintavételezés bekapcsolva) ráfittelénék egy exponenciális eloszlást, adott esetben skalár szigmával (konstansszor egységmátrix, pontosabban). Egy ismeretlen input esetén megvizsgálnám, hogy azt Encode-olva a z_mean érték belül van-e 1, 2, N szigmán. Ezzel minősíteném, hogy mennyire van az ismeretlen input a variational classifierem **éretelmezési tartomány**ában.
+- A train adatokkal a latent_dim reprezentációba beszórt **z_mean értékek**re is ráfittelnék egy exponenciális eloszlást, de ekkor már a szigmát csak annyira kötném meg, hogy legyen diagonális mátrix. Mindegyik (tehát mindkét) latent_dim-beli dimenzióban megvizsgálnám T-teszttel, hogy egy ismeretlen input z_mean reprezentációja milyen konfidenciával tekinthető az adott exponenciális eloszlásból történő mintavételezésnek? Ez alapján mondanék **konfidenciát**.
+
+#### További vizsgálatok
+
+Érdemes lehet visszatérni arra a gondolatra, hogy mégiscsak használjuk az autoencoder + classifier_head tanítást. Itt lehetséges kidolgozni egy eljárást, amivel 
+1. ki tudjuk szűrni az irreleváns input csatornákat,
+2. ugyanakkor az autoencoder rekonstrukció belevétele a tanításba a latent_dim-beli reprezentációt gazdagabban tipizálná.
+
+Az irreleváns paramétereket tehát oly módon állapíthatjuk meg, hogy megvizsgáljuk, hogy egy VAE + classifier tanítás (erre szolgál a VAEC fit_all_parts tagfüggvénye) során mely csatornákon nem bizonyul lehetségesnek a rekonstrukció. Mivel a VAE + classifier tanítás nem konvergál, itt lehet, hogy egy többlépcsős algoritmust kell alkalmazni: Az első tanítási próbálkozás, vagy több próbálkozás eredményeképpen meg kell állapítani, hogy mely input csatornák a legkevésbé rekonstruálhatóak. Ezeket ki kell venni a lossból, majd ezt követően ismét tanítani kell azzal a céllal, hogy a megmaradt csatornák közül kiválasszuk a legkevésbé rekonstruálhatóakat. Ezt a külső iterációt addig kell folytatni, amíg a bemeneten meghagyott csatornák mindegyike jól rekonstruálható lesz. A megmaradt csatornákat tekinthetjük irreleváns információ hordozójának. Az íly módon metanított Encoder pedig "érdekesebb" információt tárol, mert a kalsszifikáció két kimenetelén túli típusokra is tipizál.
+
+
 
 ### 2023 június 23-i megjegyzések
 
