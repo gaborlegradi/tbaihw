@@ -8,16 +8,16 @@ Az eredeti koncepcióm az volt, hogy
 1. betanítok egy Variational AutoEncodert (VAE),
 2. majd ennek Encoder részére ráteszek egy classifier head-et és azt úgy tanítom be, hogy az Encoder esetében trainable=False beállítással fagyasztom a taníthatóságot.
 
-Ezt először a MNIST adatokon (kézzel írt számjegyek) próbáltam ki. Mivel a számjegyek esetében minden pixel (ezek képezik az input csatornákat) releváns információt hordoz, ezért nagyon jól rekonstruálhatónak bizonyultak, és a koncepcióm jól működött.
+Ezt először a MNIST adatokon (kézzel írt számjegyek) próbáltam ki. Mivel a számjegyek esetében minden pixel (ezek képezik az input csatornákat) releváns információt hordoz, ezért nagyon jól rekonstruálhatónak bizonyultak, és a koncepcióm jól működött. Mielőtt tovább mennénk, tisztázzuk a variational autoencoderek működését, jellemzőit.
 
 #### Variational AutoEncoderek 
 
 A VAE-k eredetileg generatív eszköznek lettek kitalálva főleg képek generálásához, a GAN-ok mellett a legnépszerűbbek voltak erre a célra egy időben. VAE úgy jön létre, hogy egybeépítünk egy olyan Encoder + Decoder párost, 
-1. amelynek összeillesztésénél a neckben, a reprezentáció nagyon kis dimenziószámra (latent_dim) van szorítva a bemeneti csatornaszűmhoz képest, illetve
+1. amelynek összeillesztésénél - a továbbiakban: a **neck**ben - , a reprezentáció nagyon kis dimenziószámra (latent_dim) van szorítva a bemeneti csatornaszámhoz képest, illetve
 2. a neckben az Encoder kimenete nem fix érték, hanem valamilyen eloszlás, jelen esetben Gauss-eloszlás, amit a tanítás során egyszerű Monte-Carlo módszerrel mintavételezünk, és
-3. a lossban a rekonstrukciós loss mellett megjelenik a KL divergencia, ahol a KL divergencia referencia eloszlása a normál-eloszlás ($\mu=0$, $\sigma=1$).
+3. a lossban a rekonstrukciós loss mellett megjelenik a KL divergencia, ahol a KL divergencia referencia eloszlása a normál-eloszlás N($\mu=0$, $\sigma=1$).
 
-Egy [kifejezetten jó leírás található itt](https://towardsdatascience.com/understanding-variational-autoencoders-vaes-f70510919f73) a VAE-kről, amely megmutatja a koncepcó mögött meghúzódó Bayesiánus gondolatot is.
+Egy [kifejezetten jó leírás található itt](https://towardsdatascience.com/understanding-variational-autoencoders-vaes-f70510919f73){:target="_blank"} a VAE-kről, amely megmutatja a koncepcó mögött meghúzódó Bayesiánus gondolatot is.
 
 A VAE-k azt célozzák, hogy a tanítóadatot tipizálják, és ezt a neck-ben úgy reprezentálják, hogy a reprezentáció **teljes** és **folytonos**. A teljesség alatt azt értjük, hogy a tanítóadat mindegyikét reprezentálja a latent_dim-beli reprezentáció valmely területe, illetve a latent_dim-beli reprezentáció minden pontja - egy központi területen - "értelmes" adatot reprezentál, ezt a pontot a Decoder-re beadva éretlmezhető rekonstrukciót kapunk - pl számjegyet, ha számjegyekkkel tanítottunk, vagy emberi arcokat, ha emberi arcokkal tanítottunk. Ezt a reconstrukciós loss (pl L2 az input-outputra) és a KL divergencia együttes használatával érjük el.
 
