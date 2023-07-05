@@ -19,7 +19,17 @@ A VAE-k eredetileg generatív eszköznek lettek kitalálva főleg képek generá
 
 Egy [kifejezetten jó leírás található itt](https://towardsdatascience.com/understanding-variational-autoencoders-vaes-f70510919f73) a VAE-kről, amely megmutatja a koncepcó mögött meghúzódó Bayesiánus gondolatot is.
 
-A VAE működésének 
+A VAE-k azt célozzák, hogy a tanítóadatot tipizálják, és ezt a neck-ben úgy reprezentálják, hogy a reprezentáció **teljes** és **folytonos**. A teljesség alatt azt értjük, hogy a tanítóadat mindegyikét reprezentálja a latent_dim-beli reprezentáció valmely területe, illetve a latent_dim-beli reprezentáció minden pontja - egy központi területen - "értelmes" adatot reprezentál, ezt a pontot a Decoder-re beadva éretlmezhető rekonstrukciót kapunk - pl számjegyet, ha számjegyekkkel tanítottunk, vagy emberi arcokat, ha emberi arcokkal tanítottunk. Ezt a reconstrukciós loss (pl L2 az input-outputra) és a KL divergencia együttes használatával érjük el.
+
+A netutils.py-ban van definiálva a Sampling osztály, ez valósítja meg a neckben a latent_dim számú neuronon a reprezentációt, és a create_encoder függvényben ugyanitt látható, hogy hogyan épül be az Encoder-be. A Sampling layer minden inputra egy várható értéket (z_mean) és szigmát (z_log_var, egész pontosan ez a variancia e alapú logaritmusának kétszerese) ad vissza, majd ezt mintavételezi és így kapjuk a z-t, ami egy latent_dim hosszúságú vektor. A KL divergencia két _p_($\mu_1$, $\sigma_1$) és _q_($\mu_2$, $\sigma_2$) Gauss-eloszlás esetén, ahol _q_ a referencia-eloszlás: 
+
+$$ KL(p,q) = log \dfrac{\sigma_2}{\sigma_1} + \dfrac{\sigma_1^2 + (\mu_1 - \mu_2)^2}{2 \sigma_2^2} - \dfrac{1}{2} $$
+
+Amennyiben a referencia eloszlás N(0, 1), akkor
+
+$$ KL(p,N(0, 1)) = -log(\sigma_1) + \dfrac{\sigma_1^2 + \mu_1^2}{2} - \dfrac{1}{2} $$
+
+Ez a loss tag jelenik meg a vaec_trainer.py-ban a calc_loss függvényben a 76-77-ik sorban.
 
 
 ### 2023 június 23-i megjegyzések
