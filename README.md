@@ -66,7 +66,7 @@ Az így kialakított megoldással az alábbiakat tapasztaltam:
 A fent írtakat alátámasztják, illetve kiegészítik az alább közölt tanulási görbék ábrái.
 
 ![alt text](doc/epoch_accuracy.PNG "Title")
-1. ábra: Train és teszt accuracy, kikapcsolt mintavételezéssel inferálva
+1. ábra: Train és teszt accuracy, **ki**kapcsolt mintavételezéssel inferálva
 
 ![alt text](doc/epoch_accuracy_var.PNG "Title")
 2. ábra: Train és teszt accuracy, **be**kapcsolt mintavételezéssel inferálva
