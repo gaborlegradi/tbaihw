@@ -97,4 +97,4 @@ Az irreleváns paramétereket tehát oly módon állapíthatjuk meg, hogy megviz
 2. Ezeket ki kell venni a lossból, majd ezt követően ismét tanítani kell azzal a céllal, hogy a megmaradt csatornák közül kiválasszuk a legkevésbé rekonstruálhatóakat.
 3. Ezt a külső iterációt addig kell folytatni, amíg a bemeneten meghagyott csatornák mindegyike jól rekonstruálható lesz.
 
-A megmaradt csatornákat tekinthetjük irreleváns információ hordozójának. Az íly módon metanított Encoder pedig "érdekesebb" információt tárol, mert a kalsszifikáció két kimenetelén túli típusokra is tipizál a neckben.
+A megmaradt csatornákat tekinthetjük irreleváns információ hordozójának. Az íly módon betanított Encoder pedig "érdekesebb" információt tárol, mert a kalsszifikáció két kimenetelén túli típusokra is tipizál a neckben.
