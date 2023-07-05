@@ -63,6 +63,23 @@ Az így kialakított megoldással az alábbiakat tapasztaltam:
 -  A test0x.ipynb-ok demonstrálnak pár tanítást latent_dim=2-nél. A notebookokban ábrákat készítettem 8, 16, 32, 64, 128, 256, 512, 1000, 2000, ... 10000 epoch után. Az ábrák bal oldalán mindig a train adattal, a jobb oldalon teszt adattal készített plotok vannak. Felül az adott tanítási epochban ténylegesen mintavételzett eloszlások láthatók fixen [-5, 5] tengelymérettel. Középen a z_mean-ok láthatóak fixen [-3, 3] tengelymérettel, alul ugyanez, de "rugalmas" [min, max] tengelyméretekkel. Ezek az ábrák szépen megmutatják, hogy a tanítás során hogyan szeparálódnak a 0 és 1 labelű classok, illetve, hosszú tanítás után a reprezentáció végül 1 dimenzióba "szorul", és a tanítási adat reprezentációja a két osztályra markánsan elkülönül, lásd a legutolsó ábrákat a notebookokban. (Az egy deimenzióba szorulás oka, hogy a KL divergenciát nem sokdimenziósan (jelen esetben 2 dimenzióban) számoltuk, hanem latent_dim dimenziónkként egydimenziós Gauss eloszlásokként, amelyeket aztán összeadtuk.)
 -  Az accuracy paramétert véve alapul, a legjobb klasszifikálási performanszot 2000 epoch környékén értem el, utána ez a megoldás is túltanulási tüneteket mutatott. Ekkorra még a fent kifejtett 1 dimenzióba történő redukálódás nem teljesen játszódik le, lásd az 512, 1000 és 2000 epoch utáni ábrákat, illetve a tanító adat totális szeparációja sem jön létre.
 
+A fent írtakat alátámasztják, illetve kiegészítik az alább közölt tanulási görbék ábrái.
+
+![alt text](doc/epoch_accuracy.PNG "Title")
+1. ábra: Train és teszt accuracy, kikapcsolt mintavételezéssel inferálva
+
+![alt text](doc/epoch_accuracy_var.PNG "Title")
+2. ábra: Train és teszt accuracy, **be**kapcsolt mintavételezéssel inferálva
+
+![alt text](doc/epoch_loss.PNG "Title")
+3. ábra: Train és teszt total loss
+
+![alt text](doc/epoch_kl_loss.PNG "Title")
+4. ábra: Train és teszt KL loss
+
+![alt text](doc/epoch_pred_loss.PNG "Title")
+1. ábra: Train és teszt prediction loss (binary cross entropy)
+
 ## Javaslatok értelmezésre
 
 - Én egy teszt adaton vett, kikapcsolt mintavételezéssel számolt accuracy-ra (vagy még inkább F1 score-ra)  optimalizált tanítást választanék, ehhez hasonlót demonstrál a Test0x.ipynb notebookokban 1000, 2000 epoch utáni ábra.
