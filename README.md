@@ -4,7 +4,7 @@ Az eredeti koncepcióm az volt, hogy
 1. betanítok egy Variational AutoEncodert (VAE),
 2. majd ennek Encoder részére ráteszek egy classifier head-et és azt úgy tanítom be, hogy az Encoder esetében trainable=False beállítással fagyasztom a taníthatóságot.
 
-Ezt először a MNIST adatokon (kézzel írt számjegyek) próbáltam ki. Mivel a számjegyek esetében minden pixel (ezek képezik az input csatornákat) releváns információt hordoz, ezért nagyon jól rekonstruálhatónak bizonyultak, és a koncepcióm jól működött. Mielőtt tovább mennénk, tisztázzuk a variational autoencoderek működését, jellemzőit.
+Ezt először a MNIST adatokon (kézzel írt számjegyek) próbáltam ki. Mivel a számjegyek esetében minden pixel (ezek képezik az input csatornákat) releváns információt hordoz, és a számjegyek nagyon jól tipozálhatóak, ezért nagyon jól rekonstruálhatónak bizonyultak, és a koncepcióm jól működött. Mielőtt tovább mennénk, tisztázzuk a variational autoencoderek működését, jellemzőit.
 
 ## Variational AutoEncoderek 
 
@@ -15,13 +15,13 @@ A VAE-k eredetileg generatív eszköznek lettek kitalálva főleg képek generá
 
 Egy [kifejezetten jó leírás található itt](https://towardsdatascience.com/understanding-variational-autoencoders-vaes-f70510919f73) a VAE-kről, amely megmutatja a koncepcó mögött meghúzódó Bayesiánus gondolatot is.
 
-A VAE-k azt célozzák, hogy a tanítóadatot tipizálják, és ezt a neck-ben úgy reprezentálják, hogy a reprezentáció **teljes** és **folytonos**. 
+A VAE-k azt célozzák, hogy a tanítóadatot tipizálják, és ezt a neck-ben úgy reprezentálják, hogy a reprezentáció **teljes** és **folytonos** legyen. 
 - A **teljesség** alatt azt értjük, hogy _a tanítóadat mindegyikét_ (kevésbé ideális esetben, "magányos atipikus" train adatok jelenléte mellett: _a tanítóadat zömét_) reprezentálja a latent_dim-beli reprezentáció valmely területe.
 - A **folytonosság** pedig azt jelenti, hogy a latent_dim-beli reprezentáció minden lehetséges pontja - egy központi területen - "értelmes" kimenő adatot reprezentál, az adott pontot a Decoder-re beadva éretlmezhető rekonstrukciót kapunk - pl számjegyet, ha számjegyekkel tanítottunk, vagy emberi arcokat, ha emberi arcokkal tanítottunk, ráadásul olyat, ami a tanítóadatban pontosan ebben az alakban nincs jelen, de mégsem "lóg ki" atipikusan a tanítóadat összességéből. Ezt a reconstrukciós loss (pl L2(input-output)) és a KL divergencia együttes használatával érjük el.
 
 ## Variational réteg beépítése a kódba
 
-Itt most előreugrunk a leglényegesebb részre, egy általánosabb leírás alább található a kódbázisról. A netutils.py-ban van definiálva a Sampling osztály, ez valósítja meg a neckben a latent_dim számú neuronon a reprezentációt és a mintavételezést. A create_encoder függvényben ugyanitt látható, hogy hogyan épül be a Sampling layer az Encoder-be. A Sampling layer minden inputra egy várható értéket (z_mean) és szigmát (z_log_var, egész pontosan ez a variancia logaritmusának kétszerese) ad vissza, majd ezt mintavételezi és így kapjuk a z-t, ami egy latent_dim hosszúságú vektor. A KL divergencia két _p_($\mu_1$, $\sigma_1$) és _q_($\mu_2$, $\sigma_2$) Gauss-eloszlás esetén, ahol _q_ a referencia-eloszlás: 
+Itt most előreugrunk a leglényegesebb részre, egy általánosabb leírás alább található a kódbázisról. A netutils.py-ban van definiálva a Sampling osztály, ez valósítja meg a neckben a latent_dim számú neuronon a reprezentációt és a mintavételezést. A create_encoder függvényben ugyanitt látható, hogy hogyan épül be a Sampling layer az Encoder-be. A Sampling layer minden inputra egy várható értéket (z_mean) és szigmát (z_log_var, egész pontosan ez a variancia logaritmusának kétszerese) ad vissza, majd ezt mintavételezi és így kapjuk a z-t, ami egy latent_dim hosszúságú vektor. A KL divergencia két _p_($\mu_1$, $\sigma_1$) és _q_($\mu_2$, $\sigma_2$) **egydimenziós** Gauss-eloszlás esetén, ahol _q_ a referencia-eloszlás: 
 
 $$ KL(p,q) = log \dfrac{\sigma_2}{\sigma_1} + \dfrac{\sigma_1^2 + (\mu_1 - \mu_2)^2}{2 \sigma_2^2} - \dfrac{1}{2} $$
 
@@ -56,10 +56,10 @@ A Wisconsin Breast Cancer Dataset leírásában tulajdonképpen konkrétan szere
 
 Az első megoldásra célzottan létrehozott, fent bemutatott kódomon némi átalakítás eszközlésével egy másik megoldást dolgoztam ki (a kód historikus fejlődése miatt így kicsit feleslegesen elbonyolódott):
 1. Itt megjelent a fit_var_mlp_classifier tagfüggvény a VAEC osztályban, ami egybe tanítja a Sampling layerrel ellátott Encodert és a classifier_head-et.
-2. Ezen felül a VAEC_trainer úgy lett átalakítva, hogy tanítás során a neck-ben, vagyis a latent_dim dimenziójú reprezentációban az Encoder által kiadott eloszlásokat ténylegesen mintavételezzük és ezt kapja a classifier_head mint input, viszont inferenciakor a classifier_head a z_mean-t, vagyis az eloszlás várható értékét kapja.
+2. Ezen felül a VAEC_trainer úgy lett átalakítva, hogy tanítás során a neck-ben, vagyis a latent_dim dimenziójú reprezentációban az Encoder által kiadott eloszlásokat ténylegesen mintavételezzük, így jön létre a **z** vektor, és ezt kapja a classifier_head mint input, viszont inferenciakor a classifier_head a **z_mean**-t, vagyis az eloszlás várható értékét kapja.
 
 Az így kialakított megoldással az alábbiakat tapasztaltam:
-- Az általános tapasztalat a tanítási tesztekkel  az volt, hogy latent_dim=2, 3, ... N-re ugyanazt a klasszifikálási performanszot kapjuk (~97% accuracy), míg latent_dim=1-nél a tanulás nem indul be.
+- Az általános tapasztalat a tanítási tesztekkel  az volt, hogy latent_dim=2, 3, ... N-re ugyanazt a klasszifikálási performanszot kapjuk (~97% accuracy) a teszt adaton, míg latent_dim=1-nél a tanulás nem indul be.
 -  A test0x.ipynb-ok demonstrálnak pár tanítást latent_dim=2-nél. A notebookokban ábrákat készítettem 8, 16, 32, 64, 128, 256, 512, 1000, 2000, ... 10000 epoch után. Az ábrák bal oldalán mindig a train adattal, a jobb oldalon teszt adattal készített plotok vannak. Felül az adott tanítási epochban ténylegesen mintavételzett eloszlások láthatók fixen [-5, 5] tengelymérettel. Középen a z_mean-ok láthatóak fixen [-3, 3] tengelymérettel, alul ugyanez, de "rugalmas" [min, max] tengelyméretekkel. Ezek az ábrák szépen megmutatják, hogy a tanítás során hogyan szeparálódnak a 0 és 1 labelű classok, illetve, hosszú tanítás után a reprezentáció végül 1 dimenzióba "szorul", és a tanítási adat reprezentációja a két osztályra markánsan elkülönül, lásd a legutolsó ábrákat a notebookokban. (Az egy dimenzióba szorulás oka, hogy a KL divergenciát nem sokdimenziósan (jelen esetben 2 dimenzióban) számoltuk, hanem latent_dim dimenziónkként egydimenziós Gauss eloszlásokként, amelyeket aztán összeadtunk.)
 -  Az accuracy paramétert véve alapul, a legjobb klasszifikálási performanszot 1000-2000 epoch környékén értem el, utána ez a megoldás is túltanulási tüneteket mutatott. Ekkorra még a fent kifejtett 1 dimenzióba történő redukálódás nem teljesen játszódik le, lásd az 512, 1000 és 2000 epoch utáni ábrákat, illetve a tanító adat totális szeparációja sem jön létre.
 
@@ -83,8 +83,8 @@ A fent írtakat alátámasztják, illetve kiegészítik az alább közölt tanul
 ## Javaslatok értelmezésre
 
 - Én egy teszt adaton vett, kikapcsolt mintavételezéssel számolt accuracy-ra (vagy még inkább F1 score-ra)  optimalizált tanítást választanék, ehhez hasonlót demonstrálnak a Test0x.ipynb notebookokban a 1000, 2000 epoch utáni ábrák.
-- A train adatoknál a latent_dim reprezentációba beszórt **z értékek**re (mintavételezés **be**kapcsolva, ábrákon a felső plotok) ráfittelénék egy Gauss-eloszlást, adott esetben skalár szigmával (konstansszor egységmátrix, pontosabban). Egy ismeretlen input esetén megvizsgálnám, hogy azt Encode-olva a z_mean érték belül van-e 1, 2, N szigmán. Ezzel minősíteném, hogy mennyire van az ismeretlen input neck-beli reprezentációja a classifier_head **éretelmezési tartomány**ában.
-- A train adatokkal a latent_dim reprezentációba beszórt **z_mean értékek**re (mintavételezés **ki**kapcsolva, ábrákon a középső plotok) is ráfittelnék egy Gauss-eloszlást, de ekkor már a szigmát csak annyira kötném meg, hogy legyen diagonális mátrix. Mindegyik (tehát mindkét) latent_dim-beli dimenzióban megvizsgálnám T-teszttel, hogy egy ismeretlen input z_mean reprezentációja milyen konfidenciával tekinthető az adott Gauss-eloszlásból történő mintavételezésnek? Ez alapján mondanék **konfidenciát**.
+- A train adatoknál a latent_dim reprezentációba beszórt **z értékek**re (mintavételezés **be**kapcsolva, Test0x.ipynb notebookok ábráin a felső plotok) ráfittelénék egy Gauss-eloszlást, adott esetben skalár szigmával (konstansszor egységmátrix, pontosabban). Egy ismeretlen input esetén megvizsgálnám, hogy azt Encode-olva a z_mean érték belül van-e 1, 2, N szigmán. Ezzel minősíteném, hogy mennyire van az ismeretlen input neck-beli reprezentációja a classifier_head **éretelmezési tartomány**ában.
+- A train adatokkal a latent_dim reprezentációba beszórt **z_mean értékek**re (mintavételezés **ki**kapcsolva, Test0x.ipynb notebookok ábráin a középső plotok) is ráfittelnék egy Gauss-eloszlást, de ekkor már a szigmát csak annyira kötném meg, hogy legyen diagonális mátrix. Mindegyik (tehát mindkét) latent_dim-beli dimenzióban megvizsgálnám T-teszttel, hogy egy ismeretlen input z_mean reprezentációja milyen konfidenciával tekinthető az adott Gauss-eloszlásból történő mintavételezésnek? Ez alapján mondanék **konfidenciát**.
 
 ## További vizsgálatok
 
