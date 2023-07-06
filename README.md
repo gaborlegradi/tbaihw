@@ -4,7 +4,7 @@ Az eredeti koncepcióm az volt, hogy
 1. betanítok egy Variational AutoEncodert (VAE),
 2. majd ennek Encoder részére ráteszek egy classifier head-et és azt úgy tanítom be, hogy az Encoder esetében trainable=False beállítással fagyasztom a taníthatóságot.
 
-Ezt először a MNIST adatokon (kézzel írt számjegyek) próbáltam ki. Mivel a számjegyek esetében minden pixel (ezek képezik az input csatornákat) releváns információt hordoz, és a számjegyek nagyon jól tipizálhatóak, ezért nagyon jól rekonstruálhatónak bizonyultak, és a koncepcióm jól működött. A Wisconsin Breast Cancer Datasetre viszont más megközelítést találtam céleszrűnek. Mindkét utat bemutatom alább, de mielőtt tovább mennénk, tisztázzuk a variational autoencoderek működését, jellemzőit.
+Ezt először a MNIST adatokon (kézzel írt számjegyek) próbáltam ki. Mivel a számjegyek esetében minden pixel (ezek képezik az input csatornákat) releváns információt hordoz, és a számjegyek nagyon jól tipizálhatóak, ezért nagyon jól rekonstruálhatónak bizonyultak, és a koncepcióm jól működött. A Wisconsin Breast Cancer Datasetre viszont más megközelítést találtam célszerűnek. Mindkét utat bemutatom alább, de mielőtt tovább mennénk, tisztázzuk a variational autoencoderek működését, jellemzőit.
 
 ## Variational AutoEncoderek 
 
