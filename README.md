@@ -4,7 +4,7 @@ Az eredeti koncepcióm az volt, hogy
 1. betanítok egy Variational AutoEncodert (VAE),
 2. majd ennek Encoder részére ráteszek egy classifier head-et és azt úgy tanítom be, hogy az Encoder esetében trainable=False beállítással fagyasztom a taníthatóságot.
 
-Ezt először a MNIST adatokon (kézzel írt számjegyek) próbáltam ki. Mivel a számjegyek esetében minden pixel (ezek képezik az input csatornákat) releváns információt hordoz, és a számjegyek nagyon jól tipozálhatóak, ezért nagyon jól rekonstruálhatónak bizonyultak, és a koncepcióm jól működött. Mielőtt tovább mennénk, tisztázzuk a variational autoencoderek működését, jellemzőit.
+Ezt először a MNIST adatokon (kézzel írt számjegyek) próbáltam ki. Mivel a számjegyek esetében minden pixel (ezek képezik az input csatornákat) releváns információt hordoz, és a számjegyek nagyon jól tipozálhatóak, ezért nagyon jól rekonstruálhatónak bizonyultak, és a koncepcióm jól működött. A Wisconsin Breast Cancer Datasetre viszont más megközelítést találtam céleszrűnek. Mindkét utat bemutatom alább, de mielőtt tovább mennénk, tisztázzuk a variational autoencoderek működését, jellemzőit.
 
 ## Variational AutoEncoderek 
 
@@ -17,15 +17,15 @@ Egy [kifejezetten jó leírás található itt](https://towardsdatascience.com/u
 
 A VAE-k azt célozzák, hogy a tanítóadatot tipizálják, és ezt a neck-ben úgy reprezentálják, hogy a reprezentáció **teljes** és **folytonos** legyen. 
 - A **teljesség** alatt azt értjük, hogy _a tanítóadat mindegyikét_ (kevésbé ideális esetben, "magányos atipikus" train adatok jelenléte mellett: _a tanítóadat zömét_) reprezentálja a latent_dim-beli reprezentáció valmely területe.
-- A **folytonosság** pedig azt jelenti, hogy a latent_dim-beli reprezentáció minden lehetséges pontja - egy központi területen - "értelmes" kimenő adatot reprezentál, az adott pontot a Decoder-re beadva éretlmezhető rekonstrukciót kapunk - pl számjegyet, ha számjegyekkel tanítottunk, vagy emberi arcokat, ha emberi arcokkal tanítottunk, ráadásul olyat, ami a tanítóadatban pontosan ebben az alakban nincs jelen, de mégsem "lóg ki" atipikusan a tanítóadat összességéből. Ezt a reconstrukciós loss (pl L2(input-output)) és a KL divergencia együttes használatával érjük el.
+- A **folytonosság** pedig azt jelenti, hogy a latent_dim-beli reprezentáció minden lehetséges pontja - egy központi területen - "értelmes" kimenő adatot reprezentál, vagyis az adott pontot a Decoder-re beadva értelmezhető rekonstrukciót kapunk - pl számjegyet, ha számjegyekkel tanítottunk, vagy emberi arcokat, ha emberi arcokkal tanítottunk, ráadásul olyat, ami a tanítóadatban pontosan ebben az alakban nincs jelen, de mégsem "lóg ki" atipikusan a tanítóadat összességéből. Ezt a reconstrukciós loss (pl L2(input-output)) és a KL divergencia együttes használatával érjük el.
 
 ## Variational réteg beépítése a kódba
 
-Itt most előreugrunk a leglényegesebb részre, egy általánosabb leírás alább található a kódbázisról. A netutils.py-ban van definiálva a Sampling osztály, ez valósítja meg a neckben a latent_dim számú neuronon a reprezentációt és a mintavételezést. A create_encoder függvényben ugyanitt látható, hogy hogyan épül be a Sampling layer az Encoder-be. A Sampling layer minden inputra egy várható értéket (z_mean) és szigmát (z_log_var, egész pontosan ez a variancia logaritmusának kétszerese) ad vissza, majd ezt mintavételezi és így kapjuk a z-t, ami egy latent_dim hosszúságú vektor. A KL divergencia két _p_($\mu_1$, $\sigma_1$) és _q_($\mu_2$, $\sigma_2$) **egydimenziós** Gauss-eloszlás esetén, ahol _q_ a referencia-eloszlás: 
+Ugorjunk most előre a leglényegesebb részre, egy általánosabb leírás alább található a kódbázisról. A netutils.py-ban van definiálva a Sampling osztály, ez valósítja meg a neckben a latent_dim számú neuronon a reprezentációt és a mintavételezést. A create_encoder függvényben ugyanitt látható, hogy hogyan épül be a Sampling layer az Encoder-be. A Sampling layer minden inputra egy várható értéket (z_mean) és szigmát (z_log_var, egész pontosan ez a variancia logaritmusának kétszerese) ad vissza, majd ezt mintavételezi és így kapjuk a z-t, ami egy latent_dim hosszúságú vektor. A KL divergencia két _p_($\mu_1$, $\sigma_1$) és _q_($\mu_2$, $\sigma_2$) **egydimenziós** Gauss-eloszlás esetén, ahol _q_ a referencia-eloszlás: 
 
 $$ KL(p,q) = log \dfrac{\sigma_2}{\sigma_1} + \dfrac{\sigma_1^2 + (\mu_1 - \mu_2)^2}{2 \sigma_2^2} - \dfrac{1}{2} $$
 
-Amennyiben a referencia eloszlás N(0, 1), akkor
+Amennyiben a referencia eloszlás N(0, 1), vagyis normál-eloszlás, akkor
 
 $$ KL(p,N(0, 1)) = -log(\sigma_1) + \dfrac{\sigma_1^2 + \mu_1^2}{2} - \dfrac{1}{2} $$
 
@@ -56,7 +56,7 @@ A Wisconsin Breast Cancer Dataset leírásában tulajdonképpen konkrétan szere
 
 Az első megoldásra célzottan létrehozott, fent bemutatott kódomon némi átalakítás eszközlésével egy másik megoldást dolgoztam ki (a kód historikus fejlődése miatt így kicsit feleslegesen elbonyolódott):
 1. Itt megjelent a fit_var_mlp_classifier tagfüggvény a VAEC osztályban, ami egybe tanítja a Sampling layerrel ellátott Encodert és a classifier_head-et.
-2. Ezen felül a VAEC_trainer úgy lett átalakítva, hogy tanítás során a neck-ben, vagyis a latent_dim dimenziójú reprezentációban az Encoder által kiadott eloszlásokat ténylegesen mintavételezzük, így jön létre a **z** vektor, és ezt kapja a classifier_head mint input, viszont inferenciakor a classifier_head a **z_mean**-t, vagyis az eloszlás várható értékét kapja.
+2. Ezen felül a VAEC_trainer úgy lett átalakítva, hogy tanítás során a neck-ben, vagyis a latent_dim dimenziójú reprezentációban az Encoder által kiadott eloszlásokat ténylegesen mintavételezzük, így jön létre a **z** vektor, és ezt kapja a classifier_head mint input, viszont inferenciakor a classifier_head a **z_mean**-t, vagyis az eloszlás várható értékét kapja, tehát ilyenkor nincs mintavételezés.
 
 Az így kialakított megoldással az alábbiakat tapasztaltam:
 - Az általános tapasztalat a tanítási tesztekkel  az volt, hogy latent_dim=2, 3, ... N-re ugyanazt a klasszifikálási performanszot kapjuk (~97% accuracy) a teszt adaton, míg latent_dim=1-nél a tanulás nem indul be.
@@ -84,7 +84,7 @@ A fent írtakat alátámasztják, illetve kiegészítik az alább közölt tanul
 
 - Én egy teszt adaton vett, kikapcsolt mintavételezéssel számolt accuracy-ra (vagy még inkább F1 score-ra)  optimalizált tanítást választanék, ehhez hasonlót demonstrálnak a Test0x.ipynb notebookokban a 1000, 2000 epoch utáni ábrák.
 - A train adatoknál a latent_dim reprezentációba beszórt **z értékek**re (mintavételezés **be**kapcsolva, Test0x.ipynb notebookok ábráin a felső plotok) ráfittelénék egy Gauss-eloszlást, adott esetben skalár szigmával (konstansszor egységmátrix, pontosabban). Egy ismeretlen input esetén megvizsgálnám, hogy azt Encode-olva a z_mean érték belül van-e 1, 2, N szigmán. Ezzel minősíteném, hogy mennyire van az ismeretlen input neck-beli reprezentációja a classifier_head **éretelmezési tartomány**ában.
-- A train adatokkal a latent_dim reprezentációba beszórt **z_mean értékek**re (mintavételezés **ki**kapcsolva, Test0x.ipynb notebookok ábráin a középső plotok) is ráfittelnék egy Gauss-eloszlást, de ekkor már a szigmát csak annyira kötném meg, hogy legyen diagonális mátrix. Mindegyik (tehát mindkét) latent_dim-beli dimenzióban megvizsgálnám T-teszttel, hogy egy ismeretlen input z_mean reprezentációja milyen konfidenciával tekinthető az adott Gauss-eloszlásból történő mintavételezésnek? Ez alapján mondanék **konfidenciát**.
+- A train adatokkal a latent_dim reprezentációba beszórt **z_mean értékek**re (mintavételezés **ki**kapcsolva, Test0x.ipynb notebookok ábráin a középső és alsó plotok) is ráfittelnék egy Gauss-eloszlást, de ekkor már a szigmát csak annyira kötném meg, hogy legyen diagonális mátrix. Mindegyik (tehát mindkét) latent_dim-beli dimenzióban megvizsgálnám T-teszttel, hogy egy ismeretlen input z_mean reprezentációja milyen konfidenciával tekinthető az adott Gauss-eloszlásból történő mintavételezésnek? Ez alapján mondanék **konfidenciát**.
 
 ## További vizsgálatok
 
@@ -92,7 +92,7 @@ A fent írtakat alátámasztják, illetve kiegészítik az alább közölt tanul
 1. ki tudjuk szűrni az irreleváns input csatornákat,
 2. ugyanakkor az autoencoder rekonstrukció belevétele a tanításba a latent_dim-beli reprezentációt gazdagabban tipizálná.
 
-Az irreleváns paramétereket tehát oly módon állapíthatjuk meg, hogy megvizsgáljuk, hogy egy VAE + classifier tanítás (erre szolgál a VAEC fit_all_parts tagfüggvénye) során mely csatornákon nem bizonyul lehetségesnek a rekonstrukció. Mivel a VAE + classifier tanítás nem konvergál a Wisconsin Breast Cancer Database adataira az összes 30 input csatorna használata mellett, itt lehet, hogy egy többlépcsős algoritmust kell alkalmazni: 
+Az irreleváns paramétereket tehát oly módon állapíthatjuk meg, hogy megvizsgáljuk, hogy egy VAE + classifier tanítás (erre szolgál a VAEC fit_all_parts tagfüggvénye) során mely csatornákon nem bizonyul lehetségesnek a rekonstrukció. Mivel a VAE + classifier tanítás során a rekon loss nem konvergál a Wisconsin Breast Cancer Database adataira az összes 30 input csatorna használata mellett, itt lehet, hogy egy többlépcsős algoritmust kell alkalmazni: 
 1. Az első tanítási próbálkozás, vagy több próbálkozás eredményeképpen meg kell állapítani, hogy mely input csatornák a legkevésbé rekonstruálhatóak.
 2. Ezeket ki kell venni az input/output csatornák közül, majd ezt követően ismét tanítani kell azzal a céllal, hogy a megmaradt csatornák közül kiválasszuk a legkevésbé rekonstruálhatóakat.
 3. Ezt a külső iterációt addig kell folytatni, amíg a meghagyott input csatornák mindegyike jól rekonstruálható lesz.
