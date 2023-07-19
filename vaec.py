@@ -15,8 +15,9 @@ class VAEC():
         - mlp_classifier_with_z gets input and outputs class perdiction + z of latent_dim dimension. This is to be 
           used when training was performed in 'autoencoder' and 'mlp_classifier' modes, consecutively, OR in 'all' mode.
     - At instantiation creates TensorBoard callback with logname log_mark + timestamp.
-    - For training in 'all', 'autoencoder', 'classifier_head' or 'mlp_classifier' modes, functions fit_all_parts(), 
-      fit_autoencoder(), fit_classifier_head() and fit_mlp_classifier() can be used.
+    - For training in 'all', 'autoencoder', 'classifier_head', 'mlp_classifier' or 'var_mlp_classifier' modes, 
+      functions fit_all_parts(), fit_autoencoder(), fit_classifier_head(), fit_mlp_classifier() and 
+      fit_var_mlp_classifier() can be used.
     """
     def __init__(self, config, x_train, y_train, x_test, y_test, log_mark='default', summary=False):
         # Essential params, data and config are hold within object.
@@ -39,7 +40,7 @@ class VAEC():
         self.classifier_head = create_classifier_head(
             config['latent_dim'], config['classifier_layers'], config['activation'], summary=summary)
 
-        # Creating trainers for 'all', 'autoencoder', 'classifier_head' and 'mlp_classifier' modes.
+        # Creating trainers for 'all', 'autoencoder', 'classifier_head', 'mlp_classifier' and  'var_mlp_classifier' modes.
         self.trainer_all_parts = VAEC_Trainer(
             encoder=self.encoder, decoder=self.decoder, classifier_head=self.classifier_head, train_what='all')
         self.trainer_all_parts.compile(optimizer=tf.keras.optimizers.Adam())
@@ -71,7 +72,8 @@ class VAEC():
         output = self.classifier_head(z_mean)
         self.var_mlp_classifier = tf.keras.Model(input, [output, z_mean, z_log_var, z])
 
-    # Training functions for 'all', 'autoencoder', 'classifier_head' and 'mlp_classifier' modes' trainers.
+    # Training functions for 'all', 'autoencoder', 'classifier_head', 'mlp_classifier' 
+    # and var_mlp_classifier modes' trainers.
     def fit_all_parts(self, epochs, batch_size=128, **kwargs):
         self.trainer_all_parts.fit(self.x_train, self.y_train, validation_data=(self.x_test, self.y_test), 
                             initial_epoch=self.epoch, epochs=self.epoch + epochs, 

@@ -14,8 +14,8 @@ class Sampling(tf.keras.layers.Layer):
 def create_encoder(global_input_dim, encoder_layers, latent_dim, activation='relu', summary=False):
     """
     Creates encoder part as tf.keras.Model.
-    Input: Of global_input_dim size.
-    Output: z_mean, z_log_var, z of latent_dim size.
+    Input: Vector of global_input_dim size.
+    Output: z_mean, z_log_var, z: vectors of latent_dim size.
     """
     encoder_inputs = tf.keras.Input(shape=(global_input_dim,))
     x = encoder_inputs
