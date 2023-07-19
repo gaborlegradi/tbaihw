@@ -36,9 +36,9 @@ Ez a loss tag jelenik meg a vaec_trainer.py-ban a calc_loss függvényben a 76-7
 
 ## Az első megoldás összefoglalása
 
-A kódbázisban látható megoldásomnál arra törekedtem, hogy könnyű legyen esettanulmányokat elvégezni. A **tbaihw.py** demostrálja az eszköz használatát, ennek VS Code-ban Jupyter Notebook cellák indításával történő futtatásával generáltuk a test0x.ipynb notebookokat. A kódbázis klónozása és a requirements.txt alapján a megfelelő környezet kialakítása után futtatható.
+A kódbázisban látható megoldásomnál arra törekedtem, hogy könnyű legyen esettanulmányokat elvégezni. A **tbaihw.py** demostrálja az eszköz használatát, ennek VS Code-ban Jupyter Notebook cellák indításával történő futtatásával generáltam a test0x.ipynb notebookokat. A kódbázis klónozása és a requirements.txt alapján a megfelelő környezet kialakítása után futtatható.
 
-Amint azt az osztályok, függvények kommentjeiben részletezem, a VAEC (Variational AutoEncoder and Classifier) osztályból készített példány becsomagolja a tanító és teszt adatokat, és a legfontosabb adatokat (pl config), illetve létrehozza és tartja az encoder, decoder és classifier_head komponenseket. Ezek különféle stratégiával történő betanítása a fit_all_parts(), fit_autoencoder(), fit_classifier_head() és fit_mlp_classifier() tagfüggvényekkel lehetséges:
+Amint azt az osztályok, függvények kommentjeiben részletezem, a VAEC (Variational AutoEncoder and Classifier) osztályból (vaec.py) készített példány becsomagolja a tanító és teszt adatokat, és a legfontosabb adatokat (pl config), illetve létrehozza és tartja az encoder, decoder és classifier_head komponenseket. Ezek különféle stratégiával történő betanítása a fit_all_parts(), fit_autoencoder(), fit_classifier_head() és fit_mlp_classifier() tagfüggvényekkel lehetséges:
 - fit_all_parts(): Az összes komponenset egyszerre tanítjuk.
 - fit_autoencoder(): Csak az encoder-t és decoder-t tanítjuk VAE tanítással.
 - fit_classifier_head(): Csak a classifier_head-et tanítjuk.
@@ -46,7 +46,7 @@ Amint azt az osztályok, függvények kommentjeiben részletezem, a VAEC (Variat
 
 A betanítást követően a compile-olás nélkül létrehozott self.mlp_classifier és self.mlp_classifier_with_z használhatóak mint tisztán mlp classifier, illetve olyan classifier, amelynél az autoencoder neck layere is az outputra van kötve (a kódban z).
 
-A tanításokat a VAEC példányon belül készített VAEC_Trainer példányok végzik. Fontos észrevenni, hogy ezek ugyanazokat a decoder, encoder és classifier_head komponenseket tartják, mint a VAEC_Trainereket tartó VAEC példány. Ezek feladata tehát az, hogy a tanítás során szabályozzák, hogy a total_loss-nak mely lossok legyenek a részei, továbbá mely komponensek legyenek taníthatóak, illetve nem taníthatóak.
+A tanításokat a VAEC példányon belül készített VAEC_Trainer példányok (vaec_trainer.py) végzik. Fontos észrevenni, hogy ezek ugyanazokat a decoder, encoder és classifier_head komponenseket tartják, mint a VAEC_Trainereket tartó VAEC példány. Ezek feladata tehát az, hogy a tanítás során szabályozzák, hogy a total_loss-nak mely lossok legyenek a részei, továbbá mely komponensek legyenek taníthatóak, illetve nem taníthatóak.
 
 Ezzel a megoldással úgy terveztem már a Wisconsin Breast Cancer Dataset-en tanítani, hogy a VAEC példány fit_autoencoder tagfüggvényével először betanítom az Encoder-t és a Decoder-t, majd a fit_classifier_head tagfüggvénnyel betanítom a classifier head-et, miközben az Encoder tanítása fagyasztva van. A tapasztalatom az volt, hogy a rekonstrukció nem működött jól. Ennek lehetséges okaként jelöltem meg, hogy a 30 input csatorna nagy része irreleváns információt hordoz.
 
