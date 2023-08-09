@@ -1,4 +1,4 @@
-# Házi feladat a Turbine részére - 1st part
+# Házi feladat a Turbine részére
 
 Az eredeti koncepcióm az volt, hogy
 1. betanítok egy Variational AutoEncodert (VAE),
