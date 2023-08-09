@@ -1,4 +1,5 @@
 # Házi feladat a Turbine részére
+- Feladat leírása: [description.md](https://github.com/gaborlegradi/tbaihw/blob/master/description.md)
 
 Az eredeti koncepcióm az volt, hogy
 1. betanítok egy Variational AutoEncodert (VAE),
